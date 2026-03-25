@@ -1,6 +1,6 @@
 export function Graph() {
     return (
-        <div className="fixed inset-0 flex justify-center items-center">
+        <div className="flex flex-1 justify-center items-center py-10">
             <div className="relative border-purple-300 border-4 rounded-4xl
                 w-80 h-150
                 sm:w-150 sm:h-120

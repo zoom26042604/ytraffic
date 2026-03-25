@@ -28,12 +28,12 @@ const Button = () => {
   };
 
   return (
-    <div className="grid h-screen place-items-center bg-[#1A1A1A]">
+    <div className="flex justify-center items-center py-8 bg-[#1A1A1A]">
       <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 items-end">
         {dropdowns.map((dropdown, i) => (
           <div
             key={dropdown.label}
-            className={`flex flex-col gap-2 relative ${i === 2 ? 'col-span-2 flex items-center sm:col-span-1 sm:block' : ''}`}
+            className={`flex flex-col gap-2 relative ${i === 2 ? 'col-span-2 items-center sm:col-span-1' : ''}`}
           >
             <label className="text-white text-lg font-medium text-center">{dropdown.label}</label>
             <button
