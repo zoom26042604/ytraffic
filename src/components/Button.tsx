@@ -28,7 +28,7 @@ const Button = () => {
   };
 
   return (
-    <div className="flex justify-center items-center py-8 background-color">
+    <div className="flex justify-center items-center py-8">
       <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 items-end">
         {dropdowns.map((dropdown, i) => (
           <div
@@ -43,7 +43,8 @@ const Button = () => {
                 sm:px-25 sm:py-2 sm:border-2 sm:rounded-4xl
                 md:px-26 md:py-3 md:border-2 md:rounded-4xl
                 lg:px-38 lg:py-6 lg:border-2 lg:rounded-4xl
-                border-[#9C95DC] text-[#9C95DC] bg-transparent
+                bg-[#272727]
+                border-[#9C95DC] text-[#9C95DC]
                 hover:bg-[#9C95DC]/10 transition-colors
                 flex items-center justify-center relative
               `}
