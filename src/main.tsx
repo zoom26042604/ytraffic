@@ -6,7 +6,7 @@ import Button from './components/Button'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-[url('./assets/background.png')] bg-cover">
       <Button/>
       <Graph/>
     </div>
