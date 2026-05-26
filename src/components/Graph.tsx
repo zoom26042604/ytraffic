@@ -12,7 +12,7 @@ type Props = {
     onStopChange: (stopId: string) => void;
 };
 
-const API_URL = 'http://localhost:5000/api/affluence';
+const API_URL = '/api/affluence';
 
 const STOPS_BY_LINE: Record<string, Stop[]> = {
     A: [
