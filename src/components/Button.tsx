@@ -1,5 +1,6 @@
 import { Triangle } from 'lucide-react';
 import { useState } from 'react';
+import type { Selection } from '../App';
 
 const dropdowns = [
   {
@@ -16,14 +17,19 @@ const dropdowns = [
   },
 ];
 
-const Button = () => {
+type Props = {
+  selected: Selection;
+  onChange: (next: Selection) => void;
+};
+
+const Button = ({ selected, onChange }: Props) => {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
-  const [selected, setSelected] = useState<(string | null)[]>(dropdowns.map(() => null));
 
   const toggle = (i: number) => setOpenIndex(openIndex === i ? null : i);
 
   const select = (dropdownIndex: number, option: string | null) => {
-    setSelected(selected.map((s, i) => (i === dropdownIndex ? option : s)));
+    const next = selected.map((s, i) => (i === dropdownIndex ? option : s)) as Selection;
+    onChange(next);
     setOpenIndex(null);
   };
 
