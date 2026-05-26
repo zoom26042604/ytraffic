@@ -1,85 +1,188 @@
+import { useEffect, useState } from 'react';
 import { LineChart, Line as RLine, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import type { Line, Selection } from '../App';
+import type { Selection } from '../App';
+
+type Stop = { id: string; name: string };
+type AffluencePoint = { label: string; affluence: number };
+type ChartPoint = AffluencePoint & { temp: number };
 
 type Props = {
     selected: Selection;
-    line: Line;
-    onLineChange: (line: Line) => void;
+    stopId: string;
+    onStopChange: (stopId: string) => void;
 };
 
-type Point = { label: string; traffic: number; temp: number };
+const API_URL = 'http://localhost:5000/api/affluence';
 
-const WEEK_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
-const YEAR_LABELS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+const STOPS_BY_LINE: Record<string, Stop[]> = {
+    A: [
+        { id: 'A01', name: 'Balma-Gramont' },
+        { id: 'A02', name: 'Argoulets' },
+        { id: 'A03', name: 'Roseraie' },
+        { id: 'A04', name: 'Jolimont' },
+        { id: 'A05', name: 'Marengo-SNCF' },
+        { id: 'A06', name: 'Jean Jaurès' },
+        { id: 'A07', name: 'Capitole' },
+        { id: 'A08', name: 'Esquirol' },
+        { id: 'A09', name: 'Saint-Cyprien-République' },
+        { id: "A10", name: "Patte-d'Oie" },
+        { id: 'A11', name: 'Arènes' },
+        { id: 'A12', name: 'Fontaine-Lestang' },
+        { id: 'A13', name: 'Mermoz' },
+        { id: 'A14', name: 'Bagatelle' },
+        { id: 'A15', name: 'Mirail-Université' },
+        { id: 'A16', name: 'Reynerie' },
+        { id: 'A17', name: 'Bellefontaine' },
+        { id: 'A18', name: 'Basso-Cambo' },
+    ],
+    B: [
+        { id: 'B01', name: 'Borderouge' },
+        { id: 'B02', name: 'Trois Cocus' },
+        { id: 'B03', name: 'La Vache' },
+        { id: 'B04', name: 'Barrière de Paris' },
+        { id: 'B05', name: 'Minimes-Claude Nougaro' },
+        { id: 'B06', name: 'Canal du Midi' },
+        { id: 'B07', name: 'Compans-Caffarelli' },
+        { id: "B08", name: "Jeanne d'Arc" },
+        { id: 'B09', name: 'Jean Jaurès' },
+        { id: 'B10', name: 'François Verdier' },
+        { id: 'B11', name: 'Carmes' },
+        { id: 'B12', name: 'Palais de Justice' },
+        { id: 'B13', name: 'Saint-Michel-Marcel Langer' },
+        { id: 'B14', name: 'Empalot' },
+        { id: 'B15', name: 'Saint-Agne SNCF' },
+        { id: 'B16', name: 'Saouzelong' },
+        { id: 'B17', name: 'Rangueil' },
+        { id: 'B18', name: 'Faculté de Pharmacie' },
+        { id: 'B19', name: 'Université Paul Sabatier' },
+        { id: 'B20', name: 'Ramonville' },
+    ],
+};
 
-function mockPoints(selected: Selection, line: Line): Point[] {
-    const [granularity, period, unit] = selected as [string, string, string];
+const GRANULARITY_PARAM: Record<string, string> = {
+    Semaine: 'week',
+    Mois: 'month',
+    Année: 'year',
+};
 
-    const periodMult: Record<string, number> = {
-        'Matin': 1.5,
-        'Après-midi': 1.0,
-        'Soir': 1.7,
-    };
-    const baseTraffic = line === 'A' ? 420 : 340;
-    const tempBaseC = 16;
+const PERIOD_PARAM: Record<string, string> = {
+    Matin: 'morning',
+    'Après-midi': 'afternoon',
+    Soir: 'evening',
+};
 
-    const count =
-        granularity === 'Semaine' ? 7 :
-        granularity === 'Mois' ? 30 : 12;
+function todayLocal() {
+    const now = new Date();
+    const local = new Date(now.getTime() - now.getTimezoneOffset() * 60_000);
+    return local.toISOString().slice(0, 10);
+}
 
-    const labels = (i: number) => {
-        if (granularity === 'Semaine') return WEEK_LABELS[i];
-        if (granularity === 'Année') return YEAR_LABELS[i];
-        return String(i + 1);
-    };
+function withTemperature(points: AffluencePoint[], stopId: string, unit: string): ChartPoint[] {
+    return points.map((point, index) => {
+        const tempC = 16 + (((index * 13 + stopId.charCodeAt(2)) % 20) - 10) * 0.6;
+        const temp = unit === 'Fahrenheit'
+            ? Math.round((tempC * 9) / 5 + 32)
+            : Math.round(tempC);
 
-    return Array.from({ length: count }, (_, i) => {
-        const noise = ((i * 37 + (line === 'A' ? 11 : 23)) % 80) - 40;
-        const traffic = Math.max(0, Math.round(baseTraffic * (periodMult[period] ?? 1) + noise));
-
-        const tempNoise = ((i * 13 + (line === 'A' ? 5 : 17)) % 20) - 10;
-        const tempC = tempBaseC + tempNoise * 0.6;
-        const temp = unit === 'Fahrenheit' ? Math.round((tempC * 9) / 5 + 32) : Math.round(tempC);
-
-        return { label: labels(i), traffic, temp };
+        return { ...point, temp };
     });
 }
 
-export function Graph({ selected, line, onLineChange }: Props) {
+export function Graph({ selected, stopId, onStopChange }: Props) {
+    const [points, setPoints] = useState<ChartPoint[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const allSelected = selected.every((s) => s !== null);
-    const points = allSelected ? mockPoints(selected, line) : [];
     const unitSuffix = selected[2] === 'Fahrenheit' ? '°F' : '°C';
 
-    const lineButton = (target: Line) => (
-        <button
-            onClick={() => onLineChange(target)}
-            className={`
-                border-purple-300 border-4 rounded-4xl
-                px-5 py-1 sm:px-10 md:px-15 lg:px-20
-                transition-colors
-                ${line === target ? 'bg-purple-400 text-white' : 'bg-purple-300'}
-            `}
-        >
-            Ligne {target}
-        </button>
-    );
+    useEffect(() => {
+        if (!allSelected) {
+            return;
+        }
+
+        const [granularity, period, unit] = selected as [string, string, string];
+        const date = todayLocal();
+        const params = new URLSearchParams({
+            stop_id: stopId,
+            granularity: GRANULARITY_PARAM[granularity],
+            period: PERIOD_PARAM[period],
+            date,
+        });
+        const controller = new AbortController();
+
+        Promise.resolve<Response | null>(null)
+            .then(() => {
+                if (controller.signal.aborted) return null;
+                setIsLoading(true);
+                setError(null);
+                return fetch(`${API_URL}?${params.toString()}`, { signal: controller.signal });
+            })
+            .then(async (response) => {
+                if (!response) return;
+
+                if (!response.ok) {
+                    throw new Error(`Erreur API ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (!Array.isArray(data)) {
+                    throw new Error('Réponse API invalide');
+                }
+
+                setPoints(withTemperature(data, stopId, unit));
+            })
+            .catch((err: unknown) => {
+                if (err instanceof DOMException && err.name === 'AbortError') return;
+                setPoints([]);
+                setError(err instanceof Error ? err.message : 'Impossible de charger les données');
+            })
+            .finally(() => {
+                if (!controller.signal.aborted) {
+                    setIsLoading(false);
+                }
+            });
+
+        return () => controller.abort();
+    }, [allSelected, selected, stopId]);
 
     return (
-        <div className="flex flex-1 justify-center items-center py-10">
+        <div className="relative z-0 flex flex-none justify-center items-center pt-10 pb-24">
             <div className="relative border-purple-300 bg-[#272727] border-4 rounded-4xl
                 w-80 h-80
                 sm:w-180 sm:h-120
                 md:w-200 md:h-150
                 lg:w-350 lg:h-150">
 
-                <div className="absolute -top-5 left-1/2 -translate-x-1/2
-                    flex gap-5 sm:gap-15 md:gap-25 lg:gap-35 w-max">
-                    {lineButton('A')}
-                    {lineButton('B')}
+                <div className="absolute -top-6 left-1/2 z-10 w-72 -translate-x-1/2 sm:w-90">
+                    <select
+                        aria-label="Station"
+                        value={stopId}
+                        onChange={(event) => onStopChange(event.target.value)}
+                        className="h-12 w-full rounded-4xl border-4 border-purple-300 bg-[#272727] px-5 text-center text-sm text-[#9C95DC] outline-none sm:text-base"
+                    >
+                        {Object.entries(STOPS_BY_LINE).map(([line, stops]) => (
+                            <optgroup key={line} label={`Ligne ${line}`}>
+                                {stops.map((stop) => (
+                                    <option key={stop.id} value={stop.id}>
+                                        {stop.name}
+                                    </option>
+                                ))}
+                            </optgroup>
+                        ))}
+                    </select>
                 </div>
 
                 <div className="absolute inset-0 pt-10 pb-6 px-4 sm:px-8">
-                    {allSelected ? (
+                    {allSelected && isLoading ? (
+                        <div className="flex h-full items-center justify-center text-[#9C95DC] text-center px-6">
+                            Chargement des données...
+                        </div>
+                    ) : allSelected && error ? (
+                        <div className="flex h-full items-center justify-center text-red-300 text-center px-6">
+                            {error}
+                        </div>
+                    ) : allSelected && points.length > 0 ? (
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={points} margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>
                                 <CartesianGrid stroke="#9C95DC22" strokeDasharray="3 3" />
@@ -94,10 +197,14 @@ export function Graph({ selected, line, onLineChange }: Props) {
                                         return [value as number, 'Affluence'];
                                     }}
                                 />
-                                <RLine yAxisId="left" type="monotone" dataKey="traffic" stroke="#9C95DC" strokeWidth={3} dot={{ r: 3 }} />
+                                <RLine yAxisId="left" type="monotone" dataKey="affluence" stroke="#9C95DC" strokeWidth={3} dot={{ r: 3 }} />
                                 <RLine yAxisId="right" type="monotone" dataKey="temp" stroke="#F5A623" strokeWidth={2} strokeDasharray="4 4" dot={false} />
                             </LineChart>
                         </ResponsiveContainer>
+                    ) : allSelected ? (
+                        <div className="flex h-full items-center justify-center text-[#9C95DC] text-center px-6">
+                            Aucune donnée disponible
+                        </div>
                     ) : (
                         <div className="flex h-full items-center justify-center text-[#9C95DC] text-center px-6">
                             Sélectionne <span className="mx-1 font-semibold">Date</span>, <span className="mx-1 font-semibold">Horaire</span> et <span className="mx-1 font-semibold">Température</span> pour afficher le graphique

@@ -17,4 +17,13 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  height: auto;
+  overflow-y: auto;
+}
+
+html,
+#root {
+  min-height: 100%;
+  height: auto;
+  overflow-y: auto;
 }

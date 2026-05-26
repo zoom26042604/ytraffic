@@ -63,7 +63,7 @@ const Button = ({ selected, onChange }: Props) => {
             </button>
 
             {openIndex === i && (
-              <ul className="absolute top-full mt-2 w-full bg-[#272727] border border-[#9C95DC] rounded-xl overflow-hidden z-10">
+              <ul className="absolute top-full z-50 mt-2 w-full bg-[#272727] border border-[#9C95DC] rounded-xl overflow-hidden">
                   <li
                   onClick={() => select(i, null)}
                   className="px-4 py-2 text-[#9C95DC]/40 hover:bg-[#9C95DC]/20 cursor-pointer text-sm italic"
