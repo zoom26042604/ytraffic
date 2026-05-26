@@ -1,0 +1,91 @@
+import { Triangle } from 'lucide-react';
+import { useState } from 'react';
+import type { Selection } from '../App';
+
+const dropdowns = [
+  {
+    label: 'Date',
+    options: ['Semaine', 'Mois', 'Année'],
+  },
+  {
+    label: 'Horaire',
+    options: ['Matin', 'Après-midi', 'Soir'],
+  },
+  {
+    label: 'Température',
+    options: ['Celsius', 'Fahrenheit'],
+  },
+];
+
+type Props = {
+  selected: Selection;
+  onChange: (next: Selection) => void;
+};
+
+const Button = ({ selected, onChange }: Props) => {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  const toggle = (i: number) => setOpenIndex(openIndex === i ? null : i);
+
+  const select = (dropdownIndex: number, option: string | null) => {
+    const next = selected.map((s, i) => (i === dropdownIndex ? option : s)) as Selection;
+    onChange(next);
+    setOpenIndex(null);
+  };
+
+  return (
+    <div className="flex justify-center items-center py-8">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:gap-15 items-end">
+        {dropdowns.map((dropdown, i) => (
+          <div
+            key={dropdown.label}
+            className={`flex flex-col gap-2 relative ${i === 2 ? 'col-span-2 items-center sm:col-span-1' : ''}`}
+          >
+            <label className="text-white text-lg lg:text-xl xl:text-2xl font-medium text-center">{dropdown.label}</label>
+            <button
+              onClick={() => toggle(i)}
+              className={`
+                px-18 py-4 border-2 rounded-4xl
+                sm:px-25 sm:py-2 sm:border-2 sm:rounded-4xl
+                md:px-26 md:py-3 md:border-2 md:rounded-4xl
+                lg:px-36 lg:py-6 lg:border-2 lg:rounded-4xl
+                xl:px-48 xl:py-8 xl:border-2 xl:rounded-4xl
+                bg-[#272727]
+                border-[#9C95DC] text-[#9C95DC]
+                flex items-center justify-center relative
+              `}
+            >
+              <span className="absolute left-5 text-sm">{selected[i] ?? ''}</span>
+              <Triangle
+                size={15}
+                className={`fill-[#9C95DC] absolute right-3 sm:right-4 lg:right-5 transition-transform duration-200 ${openIndex === i ? 'rotate-180' : 'rotate-270'}`}
+              />
+            </button>
+
+            {openIndex === i && (
+              <ul className="absolute top-full z-50 mt-2 w-full bg-[#272727] border border-[#9C95DC] rounded-xl overflow-hidden">
+                  <li
+                  onClick={() => select(i, null)}
+                  className="px-4 py-2 text-[#9C95DC]/40 hover:bg-[#9C95DC]/20 cursor-pointer text-sm italic"
+                >
+                  Aucun
+                </li>
+                {dropdown.options.map((option) => (
+                  <li
+                    key={option}
+                    onClick={() => select(i, option)}
+                    className="px-4 py-2 text-[#9C95DC] hover:bg-[#9C95DC]/20 cursor-pointer text-sm"
+                  >
+                    {option}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default Button;
